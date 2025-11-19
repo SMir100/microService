@@ -3,12 +3,15 @@ const logger = require(".//middlewares/logger");
 const queryRoutes = require("./routes/queryRoutes");
 const errorHandler = require("./middlewares/errorHandler");
 require("dotenv").config();
-
+//const cors = require("cors");
+//const corsOptions = require("./config/cors");
 
 const app = express();
 
+//app.use(cors(corsOptions));
 app.use(express.json());
 app.use(logger);
+
 
 // Main API routes
 app.use("/query", queryRoutes);
