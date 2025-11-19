@@ -72,7 +72,7 @@ Redis Cache (اختیاری)
 
 ### 1) نصب پکیج‌ها
 ```bash
-mkdir microservice && cd microservice
+mkdir queryservice && cd queryservice
 npm init -y
 npm install express pg dotenv redis morgan
 ````
