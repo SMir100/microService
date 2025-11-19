@@ -262,6 +262,8 @@ curl -X POST http://localhost:3000/query/selEquFilterGrid \
 
 استفاده از تمام هسته‌های CPU:
 ```bash
+sudo npm install -g pm2
+
 pm2 start src/server.js -i max
 ```
 ### مزیت
@@ -313,37 +315,9 @@ kind: HorizontalPodAutoscaler
 
 
 
+# پیشنهاد های کلی :
 
-# ✔ افزودن Rate Limiting (جلوگیری از حملات)
-
-## 🔧 نحوه انجام (Implementation)
-
-```bash
-npm install express-rate-limit
-```
-
-در `server.js`:
-
-```js
-const rateLimit = require("express-rate-limit");
-
-const limiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 100
-});
-
-app.use(limiter);
-```
-
-## ⭐ مزایا
-
-* جلوگیری از حملات **DDoS** و **Brute Force**
-* کنترل مصرف منابع
-* حفظ پایداری سرویس در زمان ترافیک بالا
-
----
-
-# ✔ افزودن JWT Authentication (احراز هویت کاربران)
+## ✔ افزودن JWT Authentication (احراز هویت کاربران)
 
 ## 🔧 نحوه انجام
 
@@ -375,26 +349,111 @@ function auth(req, res, next) {
 app.use("/query", auth);
 ```
 
-## ⭐ مزایا
+### ⭐ مزایا
 
 * افزایش امنیت
 * جلوگیری از استفاده غیرمجاز
 * امکان تعریف Role-Based Access
 
 
-# ✔ ۱.۲ فعال‌کردن HTTPS اجباری
+## ✔ ۱.۲ فعال‌کردن HTTPS اجباری
 
-## توضیح
+### توضیح
 
 سرویس فقط اجازه درخواست از طریق HTTPS را می‌دهد.
 
-## مزیت
+### مزیت
 
 * امنیت در انتقال داده
 * جلوگیری از حملات MITM
 
 
-# ✔ پشتیبانی از GraphQL Wrapper
+
+# ✔ Query Description + Metadata
+
+### نمونه تعریف کوئری
+
+```js
+{
+  sql: "...",
+  params: ["id"],
+  description: "دریافت اطلاعات تجهیز",
+  tags: ["equipment", "grid", "read-only"]
+}
+```
+
+### مزایا
+
+* مستندسازی بهتر
+* افزایش توسعه‌پذیری
+
+---
+
+## ✔ قوانین Cache برای هر کوئری (Per-Query Caching)
+
+## 🔧 نحوه انجام
+
+در `preparedQueries.js`:
+
+```js
+selEquFilterGrid: {
+  sql: "...",
+  params: ["type_id", "equ_id"],
+  cache: true,
+  cacheTTL: 120
+}
+```
+
+در `dbService.js`:
+
+```js
+if (query.cache) {
+  const cached = await redis.get(cacheKey);
+  if (cached) return JSON.parse(cached);
+}
+```
+
+بعد از اجرای کوئری:
+
+```js
+await redis.set(cacheKey, JSON.stringify(rows), "EX", query.cacheTTL);
+```
+
+### ⭐ مزایا
+
+* افزایش سرعت تا ۵۰x
+* کاهش بار دیتابیس
+* مناسب سرویس‌های پرترافیک
+
+## ✔ افزودن Rate Limiting (جلوگیری از حملات)
+
+## 🔧 نحوه انجام (Implementation)
+
+```bash
+npm install express-rate-limit
+```
+
+در `server.js`:
+
+```js
+const rateLimit = require("express-rate-limit");
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100
+});
+
+app.use(limiter);
+```
+
+### ⭐ مزایا
+
+* جلوگیری از حملات **DDoS** و **Brute Force**
+* کنترل مصرف منابع
+* حفظ پایداری سرویس در زمان ترافیک بالا
+
+---
+## ✔ پشتیبانی از GraphQL Wrapper
 
 ## 🔧 نحوه انجام
 
@@ -412,7 +471,7 @@ type Query {
 
 Resolvers با استفاده از `dbService` نوشته می‌شود.
 
-## ⭐ مزایا
+### ⭐ مزایا
 
 * API واحد و بهینه
 * امکان ارسال چندین کوئری در یک درخواست
@@ -420,7 +479,7 @@ Resolvers با استفاده از `dbService` نوشته می‌شود.
 
 ---
 
-# ✔ اضافه‌کردن Monitoring (Prometheus + Grafana)
+## ✔ اضافه‌کردن Monitoring (Prometheus + Grafana)
 
 ## 🔧 نحوه انجام
 
@@ -437,7 +496,7 @@ app.get("/metrics", async (req, res) => {
 });
 ```
 
-## ⭐ مزایا
+### ⭐ مزایا
 
 * مشاهده وضعیت سرور به صورت Realtime
 * مانیتورینگ درخواست‌ها، خطاها و latency
@@ -445,7 +504,7 @@ app.get("/metrics", async (req, res) => {
 
 ---
 
-# ✔ افزودن Batch Query / Bulk Execute
+## ✔ افزودن Batch Query / Bulk Execute
 
 ## 🔧 نحوه انجام
 
@@ -470,14 +529,14 @@ for (let item of req.body.batch) {
 res.json({ success: true, results });
 ```
 
-## ⭐ مزایا
+### ⭐ مزایا
 
 * کاهش تعداد درخواست‌ها
 * افزایش سرعت اجرای صفحه‌های داشبورد
 
 ---
 
-# ✔ پشتیبانی از خروجی Excel (XLSX)
+## ✔ پشتیبانی از خروجی Excel (XLSX)
 
 ## 🔧 نحوه انجام
 
@@ -502,14 +561,14 @@ res.setHeader(
 await wb.xlsx.write(res);
 ```
 
-## ⭐ مزایا
+### ⭐ مزایا
 
 * مناسب واحدهای اداری
 * خروجی قابل استفاده در Excel و Power BI
 
 ---
 
-# ✔ نسخه‌بندی API (Versioning)
+## ✔ نسخه‌بندی API (Versioning)
 
 ## 🔧 نحوه انجام
 
@@ -525,7 +584,7 @@ app.use("/v1/query", routesV1);
 app.use("/v2/query", routesV2);
 ```
 
-## ⭐ مزایا
+### ⭐ مزایا
 
 * جلوگیری از اختلال در نسخه‌های قدیمی
 * توسعه API بدون شکستن نسخه قبلی
@@ -562,66 +621,10 @@ SELECT ... LIMIT $1 OFFSET $2
 }
 ```
 
-## ⭐ مزایا
+### ⭐ مزایا
 
 * سرعت بالاتر
 * کاهش حجم داده
 * مناسب جدول‌های سنگین
 
 ---
-
-# ✔ Query Description + Metadata
-
-## نمونه تعریف کوئری
-
-```js
-{
-  sql: "...",
-  params: ["id"],
-  description: "دریافت اطلاعات تجهیز",
-  tags: ["equipment", "grid", "read-only"]
-}
-```
-
-## مزایا
-
-* مستندسازی بهتر
-* افزایش توسعه‌پذیری
-
----
-
-# ✔ قوانین Cache برای هر کوئری (Per-Query Caching)
-
-## 🔧 نحوه انجام
-
-در `preparedQueries.js`:
-
-```js
-selEquFilterGrid: {
-  sql: "...",
-  params: ["type_id", "equ_id"],
-  cache: true,
-  cacheTTL: 120
-}
-```
-
-در `dbService.js`:
-
-```js
-if (query.cache) {
-  const cached = await redis.get(cacheKey);
-  if (cached) return JSON.parse(cached);
-}
-```
-
-بعد از اجرای کوئری:
-
-```js
-await redis.set(cacheKey, JSON.stringify(rows), "EX", query.cacheTTL);
-```
-
-## ⭐ مزایا
-
-* افزایش سرعت تا ۵۰x
-* کاهش بار دیتابیس
-* مناسب سرویس‌های پرترافیک
