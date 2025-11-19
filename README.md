@@ -197,7 +197,12 @@ curl -X POST http://localhost:4000/query/selEquFilterGrid \
   -H "Content-Type: application/json" \
   -d '{"type_id":10510, "equ_id":6}'
 ```
+مثال در console :
 
+```bash
+$ curl -X POST http://192.168.11.129:3000/query/selEquFilterGrid -H "Content-Type: application/json" -d '{"type_id":10510,"equ_id":6}'
+$ curl -X POST http://192.168.11.129:3000/query/selEquGrid
+```
 ### CSV:
 
 ```bash
@@ -226,9 +231,5 @@ curl -X POST http://localhost:4000/query/selEquFilterGrid \
 طراحی شده برای استفاده در سیستم‌های سازمانی و مقیاس‌پذیر.
 
 
-مثال در console :
 
----
-$ curl -X POST http://192.168.11.129:3000/query/selEquFilterGrid -H "Content-Type: application/json" -d '{"type_id":10510,"equ_id":6}'
-$ curl -X POST http://192.168.11.129:3000/query/selEquGrid
 
