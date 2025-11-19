@@ -1,6 +1,6 @@
 const pool = require("../db");
 const preparedQueries = require("../queries/preparedQueries");
-// const redis = require("../redis"); // Uncomment when Redis is ready
+// const redis = require("./redis"); // Uncomment when Redis is ready
 
 async function executePreparedQuery(queryName, params = {}) {
   const queryConfig = preparedQueries[queryName];

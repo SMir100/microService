@@ -43,7 +43,6 @@ src/
 │
 ├── db.js                          # اتصال به PostgreSQL
 └── server.js                      # راه‌اندازی سرور Express
-└── redis.js                      # برای cache
 ```
 
 ---
@@ -288,6 +287,6 @@ curl -X POST http://localhost:3000/query/selEquFilterGrid \
 
 این میکروسرویس برای استفاده در پروژه‌های سازمانی و سامانه‌های پرترافیک طراحی شده و انعطاف کامل برای توسعه بیشتر را دارد.
 
-```
+
 
 
