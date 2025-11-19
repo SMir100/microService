@@ -28,10 +28,10 @@
 src/
 │
 ├── config/
-│     └── cors.js        #
+│     └── cors.js                  # محدود کردن دامنه
 │
 ├── controllers/
-│     └── queryController.js        # کنترل پردازش کوئری و ساخت خروجی
+│     └── queryController.js       # کنترل پردازش کوئری و ساخت خروجی
 │
 ├── services/
 │     ├── dbService.js             # اجرای Prepared Statement با پارامترها
@@ -316,60 +316,7 @@ kind: HorizontalPodAutoscaler
 
 
 # پیشنهاد های کلی :
-
-## ✔ افزودن JWT Authentication (احراز هویت کاربران)
-
-## 🔧 نحوه انجام
-
-```bash
-npm install jsonwebtoken
-```
-
-Middleware:
-
-```js
-const jwt = require("jsonwebtoken");
-
-function auth(req, res, next) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).send("Unauthorized");
-
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    res.status(403).send("Invalid Token");
-  }
-}
-```
-
-در مسیر:
-
-```js
-app.use("/query", auth);
-```
-
-### ⭐ مزایا
-
-* افزایش امنیت
-* جلوگیری از استفاده غیرمجاز
-* امکان تعریف Role-Based Access
-
-
-## ✔ ۱.۲ فعال‌کردن HTTPS اجباری
-
-### توضیح
-
-سرویس فقط اجازه درخواست از طریق HTTPS را می‌دهد.
-
-### مزیت
-
-* امنیت در انتقال داده
-* جلوگیری از حملات MITM
-
-
-
-# ✔ Query Description + Metadata
+## ✔ Query Description + Metadata
 
 ### نمونه تعریف کوئری
 
@@ -424,6 +371,60 @@ await redis.set(cacheKey, JSON.stringify(rows), "EX", query.cacheTTL);
 * افزایش سرعت تا ۵۰x
 * کاهش بار دیتابیس
 * مناسب سرویس‌های پرترافیک
+
+
+## ✔ افزودن JWT Authentication (احراز هویت کاربران)
+
+## 🔧 نحوه انجام
+
+```bash
+npm install jsonwebtoken
+```
+
+Middleware:
+
+```js
+const jwt = require("jsonwebtoken");
+
+function auth(req, res, next) {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).send("Unauthorized");
+
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    res.status(403).send("Invalid Token");
+  }
+}
+```
+
+در مسیر:
+
+```js
+app.use("/query", auth);
+```
+
+### ⭐ مزایا
+
+* افزایش امنیت
+* جلوگیری از استفاده غیرمجاز
+* امکان تعریف Role-Based Access
+
+
+## ✔ ۱.۲ فعال‌کردن HTTPS اجباری
+
+### توضیح
+
+سرویس فقط اجازه درخواست از طریق HTTPS را می‌دهد.
+
+### مزیت
+
+* امنیت در انتقال داده
+* جلوگیری از حملات MITM
+
+
+
 
 ## ✔ افزودن Rate Limiting (جلوگیری از حملات)
 
