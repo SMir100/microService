@@ -11,11 +11,11 @@ async function executePreparedQuery(queryName, params = {}) {
 
   const { sql, params: requiredParams = [], cacheKey /*, cacheTTL = 60*/ } = queryConfig;
 
-  // Only use caching for queries without dynamic parameters
-  // const useCache = cacheKey && requiredParams.length === 0;
-  // if (useCache) {
-  //   const cached = await redis.get(cacheKey);
-  //   if (cached) return JSON.parse(cached);
+  // if (cacheKey && requiredParams.length === 0) {
+    // const cached = await redis.get(cacheKey);
+    // if (cached) {
+    //   return JSON.parse(cached);
+    // }
   // }
 
   // Map required parameters from body
@@ -26,12 +26,20 @@ async function executePreparedQuery(queryName, params = {}) {
     return params[p];
   });
 
-  const result = await pool.query(sql, paramValues);
+  // ✅ Prepared statement added — name ensures PG caches the execution plan
+  const statementName = `stmt_${queryName}`;
+
+  const result = await pool.query({
+    name: statementName,
+    text: sql,
+    values: paramValues
+  });
+
   const rows = result.rows;
 
   // Save to cache if enabled
-  // if (useCache) {
-  //   await redis.set(cacheKey, JSON.stringify(rows), "EX", cacheTTL);
+  // if (cacheKey && requiredParams.length === 0) {
+  //  redis.set(cacheKey, JSON.stringify(rows), "EX", cacheTTL ?? 60);
   // }
 
   return rows;

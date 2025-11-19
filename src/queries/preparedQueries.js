@@ -1,13 +1,11 @@
+// src/queries/preparedQueries.js
+
 module.exports = {
-  // Query 1: serviceType (no input needed)
   serviceType: {
     sql: "SELECT * FROM cm.domains WHERE dom_id = 10509",
-    params: [], // no parameters required
-     cacheKey:"serviceType",
-     cacheTTL: 60
+    params: []
   },
 
-  // Query 2: selEquGrid (no input needed)
   selEquGrid: {
     sql: `
       SELECT erg.id, erg.code, erg.title,
@@ -21,20 +19,18 @@ module.exports = {
       INNER JOIN disp.equipments equ ON equ.id = erg.equ_id_region
       ORDER BY erg.id DESC
     `,
-    params: [] // no parameters required
+    params: []
   },
 
-  // Query 3: selEquRegion (no input needed)
   selEquRegion: {
     sql: `
       SELECT *
       FROM disp.equipments
       WHERE row_type = 3 AND is_active = '1'
     `,
-    params: [] // no parameters required
+    params: []
   },
 
-  // Query 4: selEquFilterGrid (requires input parameters)
   selEquFilterGrid: {
     sql: `
       SELECT erg.id, erg.code, erg.title,
@@ -48,47 +44,54 @@ module.exports = {
       INNER JOIN disp.equipments equ ON (equ.id = erg.equ_id_region AND equ.id = $2)
       ORDER BY erg.id DESC
     `,
-    params: ["type_id", "equ_id"] // expects input
+    params: ["type_id", "equ_id"]
   },
+
   skillLevelList: {
     sql: "SELECT * FROM cm.domains WHERE dom_id = 11490",
     params: []
   },
 
   contractorRepairGroup: {
-    sql: `SELECT ORG.id,
-                 (ORG.code || '_' || ORG.title) AS inforrmation
-          FROM pm.ORGANIZATIONS ORG
-          INNER JOIN pm.ACCOUNT_ITEMS AI ON AI.REFERENCE_ID = ORG.ID
-          WHERE ORG.type = 32 AND ORG.category = '5'
-          ORDER BY ORG.code`,
+    sql: `
+      SELECT ORG.id,
+             (ORG.code || '_' || ORG.title) AS inforrmation
+      FROM pm.ORGANIZATIONS ORG
+      INNER JOIN pm.ACCOUNT_ITEMS AI ON AI.REFERENCE_ID = ORG.ID
+      WHERE ORG.type = 32 AND ORG.category = '5'
+      ORDER BY ORG.code
+    `,
     params: []
   },
 
   verifedPostLine: {
-    sql: `SELECT e.id, e.title, et.dom_id_type
-          FROM ast.assets e
-          INNER JOIN ast.asset_types et ON (et.id = e.at_id)
-          WHERE et.dom_id_type IN (10895,10896)
-            AND (@dom_id IS NULL OR et.dom_id_type = @dom_id)`,
+    sql: `
+      SELECT e.id, e.title, et.dom_id_type
+      FROM ast.assets e
+      INNER JOIN ast.asset_types et ON (et.id = e.at_id)
+      WHERE et.dom_id_type IN (10895,10896)
+        AND ($1::int IS NULL OR et.dom_id_type = $1)
+    `,
     params: ["dom_id"]
   },
 
   idBasedRepairGroups: {
-    sql: "SELECT * FROM pm.equipment_repair_groups WHERE id = @recived_id",
+    sql: "SELECT * FROM pm.equipment_repair_groups WHERE id = $1",
     params: ["recived_id"]
   },
 
   membersRepairGroup: {
-    sql: `SELECT mem.id,
-                 dom.title type,
-                 mem.full_name,
-                 mem.start_date,
-                 mem.end_date
-          FROM pm.equipment_repair_group_members mem
-          INNER JOIN cm.domains dom ON (dom.id = mem.dom_id_type)
-          WHERE erg_id = @received_id
-          ORDER BY dom_id_type`,
+    sql: `
+      SELECT mem.id,
+             dom.title AS type,
+             mem.full_name,
+             mem.start_date,
+             mem.end_date
+      FROM pm.equipment_repair_group_members mem
+      INNER JOIN cm.domains dom ON (dom.id = mem.dom_id_type)
+      WHERE erg_id = $1
+      ORDER BY dom_id_type
+    `,
     params: ["received_id"]
   },
 
@@ -96,6 +99,7 @@ module.exports = {
     sql: "SELECT * FROM cm.domains WHERE dom_id = 11457 ORDER BY id",
     params: []
   },
+
   supervisorsMiantenance: {
     sql: `
       SELECT
@@ -118,7 +122,7 @@ module.exports = {
   },
 
   maintenanceSupervisorById: {
-    sql: "SELECT * FROM pm.maintenance_service_plan_supervisors WHERE id = @sup_id",
+    sql: "SELECT * FROM pm.maintenance_service_plan_supervisors WHERE id = $1",
     params: ["sup_id"]
   },
 
@@ -136,7 +140,7 @@ module.exports = {
           CAST(0 AS BIT) AS SELECTED
       FROM pm.ORGANIZATIONS ORG
           LEFT JOIN cm.DOMAINS DOM_TYPE
-              ON DOM_TYPE.CODE = CAST(ORG.TYPE AS character varying(10))
+              ON DOM_TYPE.CODE = CAST(ORG.TYPE AS varchar(10))
              AND DOM_TYPE.DOM_ID = 223
       WHERE
           (ORG.TYPE & 1 > 0
@@ -173,7 +177,7 @@ module.exports = {
       INNER JOIN cm.domains dom ON upl.dom_id_service_type = dom.id
       INNER JOIN disp.equipments equ ON upl.equ_id_region = equ.id
       WHERE upl.dom_id_type = 11621
-        AND ci.con_id = @p_conid
+        AND ci.con_id = $1
 
       UNION ALL
 
@@ -194,9 +198,8 @@ module.exports = {
       INNER JOIN cm.domains dom ON upl.dom_id_service_type = dom.id
       INNER JOIN disp.equipments equ ON upl.equ_id_region = equ.id
       WHERE upl.dom_id_type = 11621
-        AND cr.con_id = @p_conid
+        AND cr.con_id = $1
     `,
     params: ["p_conid"]
   }
-
 };

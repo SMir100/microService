@@ -14,11 +14,12 @@ app.use(logger);
 app.use("/query", queryRoutes);
 
 // Health Check endpoint
-app.get("/health", (req, res) => {
-  res.json({
-    status: "UP",
-    timestamp: new Date().toISOString(),
-  });
+app.get("/health/", async (req, res) => {
+  try {
+    res.status(200).json({ api: "UP" });
+  } catch {
+    res.status(500).json({ api: "DOWN" });
+  }
 });
 
 // Metrics endpoint (basic)

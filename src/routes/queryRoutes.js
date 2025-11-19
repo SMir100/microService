@@ -2,6 +2,8 @@ const express = require("express");
 const { handleQuery } = require("../controllers/queryController");
 
 const router = express.Router();
-router.post("/", handleQuery);
+
+// queryName in URL, parameters in BODY
+router.post("/:queryName", handleQuery);
 
 module.exports = router;
