@@ -74,7 +74,7 @@ Redis Cache (اختیاری)
 ```bash
 mkdir queryservice && cd queryservice
 npm init -y
-npm install express pg dotenv redis morgan
+npm install express pg dotenv redis morgan json2csv
 ````
 
 ### 2) ایجاد فایل محیطی `.env`
