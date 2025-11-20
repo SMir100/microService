@@ -3,8 +3,7 @@
 const pool = require("../db");
 const { Query } = require("pg");
 const preparedQueries = require("../queries/preparedQueries");
-const fs = require("fs");
-const path = require("path");
+
 
 // ---------------------------------------------------------
 // Redis (Commented for future use)
@@ -61,6 +60,7 @@ async function executePreparedQuery(queryName, params = {}) {
     // ✔ Simple direct execution
     // ---------------------------------------------------------
     const { rows } = await client.query({
+      name: statementName,
       text: sql,
       values: paramValues
     });
@@ -77,24 +77,9 @@ async function executePreparedQuery(queryName, params = {}) {
     //   console.log(`🟢 Cached → ${cacheKey}`);
     // }
     // ---------------------------------------------------------
-
     // ---------------------------------------------------------
     // Slow Query Logging
-    // ---------------------------------------------------------
-    const slowThreshold = process.env.SLOW_QUERY_MS
-      ? parseInt(process.env.SLOW_QUERY_MS, 10)
-      : 300;
-
-    if (execTime > slowThreshold) {
-      const logPath = path.join(__dirname, "../../logs/slow-queries.log");
-
-      const entry = `[${new Date().toISOString()}] Query="${queryName}" Params="${JSON.stringify(
-        params
-      )}" Time=${execTime}ms\n`;
-
-      fs.mkdirSync(path.dirname(logPath), { recursive: true });
-      fs.appendFileSync(logPath, entry);
-    }
+    //await logSlowQuery(queryName, params, execTime);
 
     console.log(`✔ Query [${queryName}] executed in ${execTime}ms`);
 
