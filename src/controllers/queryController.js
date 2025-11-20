@@ -3,9 +3,13 @@ const { executePreparedQuery } = require("../services/dbService");
 
 async function handleQuery(req, reply) {
   try {
-    let rows = await executePreparedQuery(req.params.queryName, req.body);
+    const rows = await executePreparedQuery(
+      req.params.queryName,
+      req.body
+    );
 
     // Pagination
+    /*
     const page = parseInt(req.query.page || 1, 10);
     const pageSize = parseInt(req.query.pageSize || 50, 10);
 
@@ -19,6 +23,11 @@ async function handleQuery(req, reply) {
       pageSize,
       data: paged
     });
+    */
+    reply.send({
+      success: true,
+      data: rows
+    });
 
   } catch (err) {
     reply.status(400).send({ success: false, error: err.message });
@@ -26,3 +35,8 @@ async function handleQuery(req, reply) {
 }
 
 module.exports = { handleQuery };
+
+
+
+
+
