@@ -1,48 +1,68 @@
+// dbService.js (Streaming + Monitoring + Auto Cache Invalidate)
 const pool = require("../db");
+const { Query } = require("pg");
 const preparedQueries = require("../queries/preparedQueries");
-// const redis = require("./redis"); // Uncomment when Redis is ready
+//const redis = require("./redis");
 
 async function executePreparedQuery(queryName, params = {}) {
   const queryConfig = preparedQueries[queryName];
+  if (!queryConfig) throw new Error("Query not allowed.");
 
-  if (!queryConfig) {
-    throw new Error("Query not allowed or does not exist.");
+  const { sql, params: requiredParams = [], cache = false, cacheTTL = 60, invalidateOn } = queryConfig;
+
+  // Monitoring
+  const start = Date.now();
+
+  const cacheKey = `q:${queryName}:${JSON.stringify(params)}`;
+
+  // Cache Check
+  /*
+  if (cache) {
+    const cached = await redis.get(cacheKey);
+    if (cached) return JSON.parse(cached);
   }
-
-  const { sql, params: requiredParams = [], cacheKey /*, cacheTTL = 60*/ } = queryConfig;
-
-  // if (cacheKey && requiredParams.length === 0) {
-    // const cached = await redis.get(cacheKey);
-    // if (cached) {
-    //   return JSON.parse(cached);
-    // }
-  // }
-
-  // Map required parameters from body
+  */
+  // Parameter map
   const paramValues = requiredParams.map(p => {
-    if (params[p] === undefined) {
-      throw new Error(`Missing required parameter: ${p}`);
-    }
+    if (params[p] === undefined) throw new Error(`Missing required parameter: ${p}`);
     return params[p];
   });
 
-  // ✅ Prepared statement added — name ensures PG caches the execution plan
+  // Prepared statement name
   const statementName = `stmt_${queryName}`;
 
-  const result = await pool.query({
-    name: statementName,
-    text: sql,
-    values: paramValues
-  });
+  // Streaming Query
+  const client = await pool.connect();
+  try {
+    const query = client.query(
+      new Query({
+        name: statementName,
+        text: sql,
+        values: paramValues
+      })
+    );
 
-  const rows = result.rows;
+    const rows = [];
+    query.on("row", row => rows.push(row));
 
-  // Save to cache if enabled
-  // if (cacheKey && requiredParams.length === 0) {
-  //  redis.set(cacheKey, JSON.stringify(rows), "EX", cacheTTL ?? 60);
-  // }
+    await new Promise(resolve => query.on("end", resolve));
 
-  return rows;
+    /*
+    // Cache Store
+    if (cache) await redis.set(cacheKey, JSON.stringify(rows), "EX", cacheTTL);
+
+    // Auto-Invalidation
+    if (invalidateOn) redis.del(invalidateOn.map(key => `q:${key}`));
+    */
+    // Monitoring Log
+    console.log(`Query ${queryName} executed in ${Date.now() - start}ms`);
+
+    return rows;
+  } finally {
+    client.release();
+  }
 }
 
 module.exports = { executePreparedQuery };
+
+

@@ -8,13 +8,17 @@ def get_equ_filter():
         "equ_id": 50
     }
 
-    response = requests.post(API_URL, json=payload)
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+    }
 
-    if response.status_code == 200:
+    response = requests.post(API_URL, json=payload, headers=headers)
+
+    if response.ok:
         return response.json()
     else:
-        raise Exception("Query service failed")
-
+        raise Exception(f"Query service failed: {response.status_code} - {response.text}")
 
 # Example usage:
 data = get_equ_filter()
