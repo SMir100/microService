@@ -1,11 +1,11 @@
 import requests
 
-API_URL = "http://192.168.11.129:3000/query/selEquGrid"
+API_URL = "http://192.168.11.129:3000/query/selEquFilterGrid"
 
 def get_equ_filter():
     payload = {
-        "type_id": 2,
-        "equ_id": 50
+        "type_id": 10510,
+        "equ_id": 6
     }
 
     headers = {
