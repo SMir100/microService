@@ -81,8 +81,35 @@ async function executePreparedQuery(queryName, params = {}) {
     // }
     // ---------------------------------------------------------
 
-    console.log(`✔ Query [${queryName}] executed in ${Date.now() - start}ms`);
+    const execTime = Date.now() - start;
+
+    // ------------------------------
+    // Slow Query Logging
+    // ------------------------------
+    const slowThreshold = process.env.SLOW_QUERY_MS
+      ? parseInt(process.env.SLOW_QUERY_MS, 10)
+      : 300;
+
+    if (execTime > slowThreshold) {
+      const fs = require("fs");
+      const path = require("path");
+
+      const logPath = path.join(__dirname, "../../logs/slow-queries.log");
+
+      const entry = `[${new Date().toISOString()}] Query="${queryName}" Params="${JSON.stringify(
+        params
+      )}" Time=${execTime}ms\n`;
+
+      // ایجاد پوشه در صورت نبود
+      fs.mkdirSync(path.dirname(logPath), { recursive: true });
+
+      // اضافه کردن به فایل
+      fs.appendFileSync(logPath, entry);
+    }
+
+    console.log(`✔ Query [${queryName}] executed in ${execTime}ms`);
     return rows;
+
 
   } finally {
     client.release();
